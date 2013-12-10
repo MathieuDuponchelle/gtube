@@ -2,7 +2,7 @@ The purpose of this project is to let users browse youtube
 in a native interface using Gtk, and let them convert the video they just
 watched / listened to to audio.
 
-To launch it, use ./crawler.py
+To launch it, use ./gtube.py
 
 My use case is that I can only play CDs in my car, and moreover they need
 to be raw PCM, not even MP3, and I was fed up with listening to a nice tune
