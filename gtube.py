@@ -29,6 +29,9 @@ class Crawler(Gtk.Application):
         self._current_state = Gst.State.PAUSED
         self._converter_queue = ConverterQueue()
 
+        gtksettings = Gtk.Settings.get_default()
+        gtksettings.set_property("gtk-application-prefer-dark-theme", True)
+
         self.connect("activate", self._activatedCb)
         self.connect("startup", self._startupCb)
 
