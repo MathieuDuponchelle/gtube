@@ -41,4 +41,5 @@ class ConverterQueue:
         self.pipeline.setState(Gst.State.PLAYING)
 
     def _eosCb(self, pipeline):
+        pipeline.setState(Gst.State.NULL)
         self._dequeue()

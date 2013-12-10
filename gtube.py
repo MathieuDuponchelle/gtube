@@ -28,6 +28,7 @@ class Crawler(Gtk.Application):
         self._gridLock = thread.allocate_lock()
         self._current_state = Gst.State.PAUSED
         self._converter_queue = ConverterQueue()
+        self.pipeline = None
 
         gtksettings = Gtk.Settings.get_default()
         gtksettings.set_property("gtk-application-prefer-dark-theme", True)
@@ -148,6 +149,8 @@ class Crawler(Gtk.Application):
         uri = GLib.filename_to_uri(os.path.join(os.getcwd(), "data", name + ".part"), None)
         pipe = Gst.parse_launch("uridecodebin uri=" + uri +" name=d ! xvimagesink name=my_video_sink d. ! autoaudiosink")
         pipeline = SimplePipeline(pipe, pipe.get_by_name("my_video_sink"))
+        if self.pipeline:
+            self.pipeline.setState(Gst.State.NULL)
         self.pipeline = pipeline
         self.viewer.setPipeline(pipeline)
         self.viewer._playButtonCb(None, None)
