@@ -1,0 +1,29 @@
+The purpose of this project is to let users browse youtube
+in a native interface using Gtk, and let them convert the video they just
+watched / listened to to audio.
+
+To launch it, use ./crawler.py
+
+My use case is that I can only play CDs in my car, and moreover they need
+to be raw PCM, not even MP3, and I was fed up with listening to a nice tune
+on youtube, then downloading it with youtube-dl, then converting it,
+and wanted to be able to do these three things in the same interface.
+
+The project uses python 2
+
+There is a basic check for unmet dependencies when launching the
+executable, but we can list them here as well.
+
+The components / required dependencies are :
+    gdata (sudo easy_install gdata) -> for searching youtube
+    youtube_dl (sudo pip install youtube_dl) -> for downloading from youtube
+    recent gstreamer (distro dependent) -> for playing back / converting
+    recent gtk (distro dependent) -> interface stuff + glib utilities
+
+A lot of the code in there has been taken from the pitivi video editor,
+the new bits are in converter_queue crawler, media_entry, service_interface and
+youtube_service.
+
+There is a config file that gets loaded, config.py.
+
+It's a simple key value file, the constants are described in there.
