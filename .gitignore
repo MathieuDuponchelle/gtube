@@ -1,0 +1,4 @@
+*.pyc
+*~
+*flymake.py
+data

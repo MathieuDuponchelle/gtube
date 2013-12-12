@@ -7,19 +7,15 @@ from media_entry import MediaEntry
 from service_interface import ServiceInterface
 from config import DEBUG
 
-import youtube_dl
-from FileDownloader import FileDownloader
-
 class YouTubeService(ServiceInterface):
     def __init__(self):
+        ServiceInterface.__init__(self)
         yt_service = gdata.youtube.service.YouTubeService()
         yt_service.ssl = True  # Why not ?
         yt_service.developer_key = "AIzaSyAHriJg_4_SMBy11eq7N-8-QkAR66LtlxE"
         yt_service.client_id = "158353063395-4cdq0ij6j2daalhagbcfnqrgoftauvht.apps.googleusercontent.com"
         self._yt_service = yt_service
-        self._ydl = youtube_dl.YoutubeDL({'outtmpl': '%(id)s%(ext)s'})
-        self._ydl.add_default_info_extractors()
-        self.downloader = None
+        self._name = "youtube"
 
         self._current_feed = None
 
@@ -44,7 +40,8 @@ class YouTubeService(ServiceInterface):
                                      [thumb.url for thumb in _entry.media.thumbnail],
                                      _entry.media.title.text,
                                      _entry.media.duration.seconds,
-                                     _entry.media.description.text)
+                                     _entry.media.description.text,
+                                     self)
             _entries.append(_mediaEntry)
         return _entries
 
@@ -77,36 +74,8 @@ class YouTubeService(ServiceInterface):
         for entry in feed.entry:
             self._printEntryDetails(entry)
 
-    def downloadUrl(self, url, progress_hook):
-        infos = self._ydl.extract_info(url, download=False)
-        params = {}
-        params["quiet"] = True
-        downloader = FileDownloader(self, params)
-        downloader.add_progress_hook(progress_hook)
-        self.downloader = downloader
-        target = os.path.join(os.getcwd(), "data", url.split("/")[-1])
-        downloader._do_download(unicode(target), infos["entries"][0])
-
-    def stop_download(self):
-        self.downloader.stop_download()
-
-    def to_screen(self, *args, **kargs):
-        pass
-
-    def to_stderr(self, message):
-        pass
-
-    def to_console_title(self, message):
-        pass
-
-    def trouble(self, *args, **kargs):
-        pass
-
-    def report_warning(self, *args, **kargs):
-        pass
-
-    def report_error(self, *args, **kargs):
-        pass
+    def _get_url_from_infos(self, infos):
+        return infos["entries"][0]
 
 #Basic unit tests, will need some assertions :)
 

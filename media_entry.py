@@ -1,10 +1,12 @@
 class MediaEntry(object):
-    def __init__(self, media_url, thumbnail_urls, title, duration, description):
+    def __init__(self, media_url, thumbnail_urls, title, duration, description, service, audio_only=False):
         self._media_url = media_url
         self._thumbnail_urls = thumbnail_urls
         self._title = title
         self._duration = duration
         self._description = description
+        self._service = service
+        self._audio_only = audio_only
 
     @property
     def thumbnail_urls(self):
@@ -49,3 +51,19 @@ class MediaEntry(object):
     @description.setter
     def description(self, value):
         self._description = value
+
+    @property
+    def service(self):
+        return self._service
+
+    @service.setter
+    def service(self, value):
+        self._service = value
+
+    @property
+    def audio_only(self):
+        return self._audio_only
+
+    @audio_only.setter
+    def audio_only(self, value):
+        self._audio_only = value

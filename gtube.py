@@ -13,17 +13,23 @@ import thread
 import shutil
 
 from youtube_service import YouTubeService
+from soundcloud_service import SoundCloudService
 from converter_queue import ConverterQueue
 from viewer import PitiviViewer
 from pipeline import SimplePipeline
 from config import RESULT_COLUMNS, MINIMUM_DOWNLOADED_SIZE, MUSIC_DIRECTORY, VIDEO_DIRECTORY
 from check import check_hard_dependencies
 
+from random import shuffle
+
 class Crawler(Gtk.Application):
     def __init__(self):
         Gtk.Application.__init__(self)
         self.builder = None
         self._yt_service = None
+        self._soundcloud_service = None
+        self._services = None
+        self._current_service = None
         self._alreadyPlaying = False
         self._gridLock = thread.allocate_lock()
         self._current_state = Gst.State.PAUSED
@@ -61,6 +67,9 @@ class Crawler(Gtk.Application):
 
         self._resultGrid = self.builder.get_object("grid2")
         self._yt_service = YouTubeService()
+        self._soundcloud_service = SoundCloudService()
+
+        self._services = [self._yt_service, self._soundcloud_service]
 
         self._title_label = self.builder.get_object("titlelabel")
         self._duration_label = self.builder.get_object("durationlabel")
@@ -87,10 +96,13 @@ class Crawler(Gtk.Application):
             self._resultGrid.remove(label)
 
     def _retrieveImageFromUrl(self, url):
-        name = os.getcwd()
-        split = url.split('/')
-        name = os.path.join(name, "data", split[-2] + "_" + split[-1])
-        urllib.urlretrieve(url, name)
+        if url not in ["soundcloud_default.png"]:
+            name = os.getcwd()
+            split = url.split('/')
+            name = os.path.join(name, "data", split[-2] + "_" + split[-1])
+            urllib.urlretrieve(url, name)
+        else:
+            name = os.path.join(os.getcwd(), url)
         return name
 
     def _getImage(self, entry, _row, _col):
@@ -109,7 +121,7 @@ class Crawler(Gtk.Application):
         self._gridLock.acquire()
         hbox = Gtk.HBox()
         vbox = Gtk.VBox()
-        label = Gtk.Label(label=entry.title)
+        label = Gtk.Label(label=entry.title + " " + entry.service.getName())
         label.set_line_wrap(True)
         vbox.pack_start(box, False, False, 0)
         vbox.pack_start(label, False, False, 0)
@@ -121,16 +133,22 @@ class Crawler(Gtk.Application):
 
     def _cleanup(self):
         if self._alreadyPlaying:
-            self._yt_service.stop_download()
+            self._current_service.stop_download()
             self.pipeline.setState(Gst.State.NULL)
 
         shutil.rmtree(os.path.join(os.getcwd(), "data"))
 
     def _searchActivatedCb(self, entry):
         self._clearGrid()
-        _entries = self._yt_service.search(entry.get_text())
+        _entries = []
+        for service in self._services:
+            _tmp_entries = service.search(entry.get_text())
+            for _entry in _tmp_entries:
+                _entries.append(_entry)
         _col = 0
         _row = 0
+
+        shuffle(_entries)  # Because why not ?
 
         for _entry in _entries:
             thread.start_new_thread(self._getImage, (_entry, _row, _col))
@@ -147,19 +165,28 @@ class Crawler(Gtk.Application):
         self._alreadyPlaying = True
         name = self._current_url.split("/")[-1]
         uri = GLib.filename_to_uri(os.path.join(os.getcwd(), "data", name + ".part"), None)
-        pipe = Gst.parse_launch("uridecodebin uri=" + uri +" name=d ! xvimagesink name=my_video_sink d. ! autoaudiosink")
+        if not self._current_entry.audio_only:
+            pipe = Gst.parse_launch("uridecodebin uri=" + uri +" name=d ! xvimagesink name=my_video_sink d. ! autoaudiosink")
+        else:
+            pipe = Gst.parse_launch("uridecodebin uri=" + uri + " ! tee name=t ! queue ! audioresample ! audioconvert ! synaescope shader=3 ! videoconvert ! xvimagesink name=my_video_sink t. ! queue ! audioresample ! audioconvert ! autoaudiosink")
         pipeline = SimplePipeline(pipe, pipe.get_by_name("my_video_sink"))
+        pipeline.connect("eos", self._eosCb)
         if self.pipeline:
             self.pipeline.setState(Gst.State.NULL)
         self.pipeline = pipeline
         self.viewer.setPipeline(pipeline)
         self.viewer._playButtonCb(None, None)
 
+    def _eosCb(self, pipeline):
+        print "pipeline has got to EOS !"
+
     def _progress_hook(self, status):
         if status["status"] == "finished":
             self._convert_button.set_sensitive(True)
             self._keep_button.set_sensitive(True)
             self._current_uri = os.path.join(os.getcwd(), "data", status["filename"])
+            if not self._alreadyPlaying:
+                GLib.idle_add(self._startPlaying)
             return
 
         try:
@@ -183,13 +210,14 @@ class Crawler(Gtk.Application):
     def _download_url(self, entry):
         self._current_url = entry.media_url
         self._current_entry = entry
-        self._yt_service.downloadUrl(entry.media_url, self._progress_hook)
+        entry.service.downloadUrl(entry.media_url, self._progress_hook)
 
     def _imageClickedCb(self, widget, event, entry):
         if self._alreadyPlaying:
             self.viewer._playButtonCb(None, None)
-            self._yt_service.stop_download()
+            self._current_service.stop_download()
 
+        self._current_service = entry.service
         self._convert_button.set_sensitive(False)
         self._keep_button.set_sensitive(False)
         self._alreadyPlaying = False
