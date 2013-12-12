@@ -15,7 +15,7 @@ class SoundCloudService(ServiceInterface):
         self._name = "soundcloud"
 
     def search(self, words):
-        self._current_feed = self._client.get('/tracks', q='deep house')
+        self._current_feed = self._client.get('/tracks', q=words)
         return self._createMediaEntries()
 
     def _createMediaEntries(self):
