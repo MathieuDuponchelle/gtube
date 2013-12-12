@@ -27,7 +27,7 @@ class SoundCloudService(ServiceInterface):
             _mediaEntry = MediaEntry(entry.obj["permalink_url"],
                                      [artwork_url],
                                      entry.obj["title"],
-                                     str(entry.obj["duration"]),
+                                     str(entry.obj["duration"] / 1000),  # Duration is in milliseconds
                                      entry.obj["description"],
                                      self,
                                      audio_only=True)
