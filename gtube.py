@@ -6,6 +6,7 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GLib
 from gi.repository import Gst
+Gst.init([])
 
 import urllib
 import os
