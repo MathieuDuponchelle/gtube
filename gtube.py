@@ -165,7 +165,10 @@ class Crawler(Gtk.Application):
     def _startPlaying(self):
         self._alreadyPlaying = True
         name = self._current_url.split("/")[-1]
-        uri = GLib.filename_to_uri(os.path.join(os.getcwd(), "data", name + ".part"), None)
+        if self._convert_button.get_sensitive():
+            uri = GLib.filename_to_uri(os.path.join(os.getcwd(), "data", name), None)
+        else:
+            uri = GLib.filename_to_uri(os.path.join(os.getcwd(), "data", name + ".part"), None)
         if not self._current_entry.audio_only:
             pipe = Gst.parse_launch("uridecodebin uri=" + uri +" name=d ! xvimagesink name=my_video_sink d. ! autoaudiosink")
         else:
