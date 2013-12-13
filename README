@@ -19,6 +19,8 @@ The components / required dependencies are :
     youtube_dl (sudo pip install youtube_dl) -> for downloading from youtube
     recent gstreamer (distro dependent) -> for playing back / converting
     recent gtk (distro dependent) -> interface stuff + glib utilities
+    soundcloud (sudo pip install soundcloud) -> for searching soundcloud
+    rtmpdump -> for downloading certain feeds.
 
 A lot of the code in there has been taken from the pitivi video editor,
 the new bits are in converter_queue crawler, media_entry, service_interface and
@@ -27,3 +29,7 @@ youtube_service.
 There is a config file that gets loaded, config.py.
 
 It's a simple key value file, the constants are described in there.
+
+Known bugs to fix :
+
+Sometimes playback stops, didn't take the time to look at that.
